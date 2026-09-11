@@ -12,8 +12,8 @@ can compare "what the model looked at" against known diagnostic cues.
 from __future__ import annotations
 
 import dataclasses
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 import numpy as np
 
@@ -23,8 +23,8 @@ from spectronet.config import CLASSES, ExplainConfig
 @dataclasses.dataclass
 class ExplanationResult:
     class_name: str
-    lime_mask: Optional[np.ndarray]
-    shap_values: Optional[np.ndarray]
+    lime_mask: np.ndarray | None
+    shap_values: np.ndarray | None
 
 
 def explain_with_lime(
@@ -39,7 +39,6 @@ def explain_with_lime(
     return class probabilities (N, num_classes) -- i.e. `model.predict`.
     """
     from lime import lime_image
-    from skimage.segmentation import mark_boundaries
 
     explainer = lime_image.LimeImageExplainer()
     explanation = explainer.explain_instance(

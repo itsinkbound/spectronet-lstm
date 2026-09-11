@@ -9,9 +9,7 @@ from __future__ import annotations
 
 import dataclasses
 from pathlib import Path
-from typing import Dict, Optional
 
-import numpy as np
 import tensorflow as tf
 
 from spectronet.config import PipelineConfig
@@ -22,7 +20,7 @@ from spectronet.models.fusion_model import build_fusion_model, enable_fine_tunin
 class TrainingArtifacts:
     model: tf.keras.Model
     history_head: tf.keras.callbacks.History
-    history_fine_tune: Optional[tf.keras.callbacks.History]
+    history_fine_tune: tf.keras.callbacks.History | None
 
 
 def _callbacks(cfg: PipelineConfig, tag: str):
@@ -79,7 +77,9 @@ def train_fusion_model(
         verbose=2,
     )
 
-    return TrainingArtifacts(model=model, history_head=history_head, history_fine_tune=history_fine_tune)
+    return TrainingArtifacts(
+        model=model, history_head=history_head, history_fine_tune=history_fine_tune
+    )
 
 
 def train_baseline(

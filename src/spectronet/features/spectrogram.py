@@ -6,8 +6,8 @@ image-pretrained CNN backbones (ResNet101 / VGG16 / InceptionV3).
 """
 from __future__ import annotations
 
-import numpy as np
 import librosa
+import numpy as np
 
 from spectronet.config import SpectrogramConfig
 

@@ -7,12 +7,10 @@ ambiguity with the final fine-tuned model).
 """
 from __future__ import annotations
 
-from typing import List
-
 import tensorflow as tf
 from tensorflow.keras import layers, models
 
-from spectronet.config import ModelConfig, CLASSES
+from spectronet.config import CLASSES, ModelConfig
 from spectronet.features.backbone_extractor import (
     build_multi_backbone_feature_extractor,
     fuse_backbone_outputs,

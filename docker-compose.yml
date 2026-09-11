@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  spectronet:
+    build: .
+    image: spectronet-lstm:latest
+    volumes:
+      - ./data:/app/data
+      - ./artifacts:/app/artifacts
+      - ./configs:/app/configs
+    command: ["--config", "configs/config.yaml", "--stage", "all"]
