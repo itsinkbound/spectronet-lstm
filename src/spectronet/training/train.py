@@ -77,7 +77,9 @@ def train_fusion_model(
         verbose=2,
     )
 
-    return TrainingArtifacts(model=model, history_head=history_head, history_fine_tune=history_fine_tune)
+    return TrainingArtifacts(
+        model=model, history_head=history_head, history_fine_tune=history_fine_tune
+    )
 
 
 def train_baseline(
