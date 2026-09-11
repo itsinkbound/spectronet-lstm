@@ -5,7 +5,6 @@ accuracy/precision/recall/F1 (Table 1), normalized confusion matrix
 from __future__ import annotations
 
 import dataclasses
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -29,11 +28,11 @@ class EvaluationResult:
     recall: float
     f1: float
     confusion: np.ndarray  # normalized, rows=truth, cols=pred
-    per_class_auc: Dict[str, float]
+    per_class_auc: dict[str, float]
 
 
 def evaluate_predictions(
-    y_true_onehot: np.ndarray, y_pred_proba: np.ndarray, classes: List[str] = CLASSES
+    y_true_onehot: np.ndarray, y_pred_proba: np.ndarray, classes: list[str] = CLASSES
 ) -> EvaluationResult:
     y_true = np.argmax(y_true_onehot, axis=1)
     y_pred = np.argmax(y_pred_proba, axis=1)
@@ -63,7 +62,7 @@ def evaluate_predictions(
     )
 
 
-def results_table(results: Dict[str, EvaluationResult]) -> pd.DataFrame:
+def results_table(results: dict[str, EvaluationResult]) -> pd.DataFrame:
     """Builds the paper's Table 1 style comparison across models."""
     rows = []
     for model_name, r in results.items():

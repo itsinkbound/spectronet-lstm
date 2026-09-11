@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import dataclasses
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import yaml
 
@@ -94,8 +94,8 @@ class PipelineConfig:
     explain: ExplainConfig = dataclasses.field(default_factory=ExplainConfig)
 
     @staticmethod
-    def from_yaml(path: str | Path) -> "PipelineConfig":
-        raw: Dict[str, Any] = yaml.safe_load(Path(path).read_text())
+    def from_yaml(path: str | Path) -> PipelineConfig:
+        raw: dict[str, Any] = yaml.safe_load(Path(path).read_text())
         cfg = PipelineConfig()
         for section, values in (raw or {}).items():
             if not hasattr(cfg, section) or values is None:

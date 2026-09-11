@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
 
-from spectronet.config import ModelConfig, CLASSES
-from spectronet.models.lstm_head import build_lstm_head
+from spectronet.config import CLASSES, ModelConfig
 from spectronet.models.fusion_model import BASELINE_BUILDERS
+from spectronet.models.lstm_head import build_lstm_head
 
 
 def test_lstm_head_output_shape():

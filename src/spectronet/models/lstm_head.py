@@ -8,12 +8,10 @@ diagram, Fig. 2) and predicts one of the 5 heartbeat classes.
 """
 from __future__ import annotations
 
-from typing import List
-
 import tensorflow as tf
 from tensorflow.keras import layers, models
 
-from spectronet.config import ModelConfig, CLASSES
+from spectronet.config import CLASSES, ModelConfig
 
 
 def build_lstm_head(

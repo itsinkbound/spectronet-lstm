@@ -9,18 +9,16 @@ from __future__ import annotations
 
 import argparse
 import logging
-from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
 
-from spectronet.config import PipelineConfig, CLASSES
-from spectronet.data.dataset import load_manifest, stratified_split, one_hot
+from spectronet.config import CLASSES, PipelineConfig
+from spectronet.data.dataset import load_manifest, one_hot, stratified_split
 from spectronet.data.preprocessing import preprocess_signal
-from spectronet.features.spectrogram import signal_to_backbone_input
-from spectronet.training.train import train_fusion_model, train_baseline
-from spectronet.models.fusion_model import BASELINE_BUILDERS
 from spectronet.evaluation.metrics import evaluate_predictions, results_table
+from spectronet.features.spectrogram import signal_to_backbone_input
+from spectronet.training.train import train_fusion_model
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("spectronet.pipeline")

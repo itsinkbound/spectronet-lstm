@@ -8,10 +8,8 @@ training phase all backbone layers are frozen; during fine-tuning the last
 """
 from __future__ import annotations
 
-from typing import Dict, List
-
 import tensorflow as tf
-from tensorflow.keras import layers, models
+from tensorflow.keras import layers
 
 _BACKBONE_FACTORY = {
     "resnet101": (
@@ -59,14 +57,14 @@ def unfreeze_last_n_layers(backbone: tf.keras.Model, n: int) -> None:
 
 
 def build_multi_backbone_feature_extractor(
-    backbone_names: List[str], trainable: bool = False
-) -> Dict[str, tf.keras.Model]:
+    backbone_names: list[str], trainable: bool = False
+) -> dict[str, tf.keras.Model]:
     """Instantiate one frozen (by default) backbone per name."""
     return {name: build_backbone(name, trainable=trainable) for name in backbone_names}
 
 
 def fuse_backbone_outputs(
-    image_input: tf.Tensor, backbones: Dict[str, tf.keras.Model]
+    image_input: tf.Tensor, backbones: dict[str, tf.keras.Model]
 ) -> tf.Tensor:
     """Run the same spectrogram image through every backbone and concatenate
     the pooled embeddings -> the paper's "feature fusion" step."""
