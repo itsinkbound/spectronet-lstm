@@ -1,0 +1,45 @@
+data:
+  root_dir: "/app/data/"          # expects set_a/, set_b/, set_a.csv, set_b.csv, set_a_timing.csv
+  sample_rate: 4000
+  clip_seconds: 5.0
+  train_split: 0.72
+  val_split: 0.08
+  test_split: 0.20
+  random_seed: 42
+
+preprocess:
+  bandpass_low_hz: 20.0
+  bandpass_high_hz: 400.0
+  wavelet: "db4"
+  wavelet_level: 4
+
+spectrogram:
+  n_fft: 1024
+  hop_length: 256
+  n_mels: 128
+  image_size: 224
+  n_mfcc: 40
+
+model:
+  backbones: ["resnet101", "vgg16", "inception_v3"]
+  lstm_units: [128, 64]
+  dense_units: 128
+  dropout: 0.3
+  fine_tune_last_n_layers: 50
+
+train:
+  batch_size: 16
+  epochs_head: 20
+  epochs_fine_tune: 20
+  learning_rate: 0.0001
+  early_stopping_patience: 15
+  checkpoint_dir: "artifacts/checkpoints"
+
+baselines:
+  enabled: true
+  models: ["simple_rnn", "gru", "tcn", "mlp"]
+
+explain:
+  n_shap_background: 32
+  n_lime_samples: 500
+  output_dir: "artifacts/xai"
