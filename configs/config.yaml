@@ -1,5 +1,5 @@
 data:
-  root_dir: "data/raw"          # expects set_a/, set_b/, set_a.csv, set_b.csv, set_a_timing.csv
+  root_dir: "src/spectronet/data/DHD"          # expects set_a/, set_b/, set_a.csv, set_b.csv, set_a_timing.csv
   sample_rate: 4000
   clip_seconds: 5.0
   train_split: 0.72
@@ -28,7 +28,7 @@ model:
   fine_tune_last_n_layers: 50
 
 train:
-  batch_size: 32
+  batch_size: 16
   epochs_head: 20
   epochs_fine_tune: 20
   learning_rate: 0.0001
