@@ -7,6 +7,7 @@ training phase all backbone layers are frozen; during fine-tuning the last
 `fine_tune_last_n_layers` layers of each backbone are unfrozen.
 """
 from __future__ import annotations
+import keras
 
 import tensorflow as tf
 from tensorflow.keras import layers
@@ -40,11 +41,22 @@ def build_backbone(name: str, trainable: bool = False) -> tf.keras.Model:
     base._name = f"{name}_backbone"
     return base
 
+@keras.saving.register_keras_serializable(package="spectronet")
+class BackbonePreprocess(layers.Layer):
+    def __init__(self, backbone_name: str, target_size: int, **kwargs):
+        super().__init__(**kwargs)
+        self.backbone_name = backbone_name
+        self.target_size = target_size
+        self._preprocess_fn = _BACKBONE_FACTORY[backbone_name][1]
 
-def preprocess_for_backbone(name: str, images: tf.Tensor) -> tf.Tensor:
-    _, preprocess_fn, input_size = _BACKBONE_FACTORY[name]
-    resized = tf.image.resize(images, (input_size, input_size))
-    return preprocess_fn(resized)
+    def call(self, inputs):
+        resized = tf.image.resize(inputs, (self.target_size, self.target_size))
+        return self._preprocess_fn(resized)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"backbone_name": self.backbone_name, "target_size": self.target_size})
+        return config
 
 
 def unfreeze_last_n_layers(backbone: tf.keras.Model, n: int) -> None:
@@ -63,13 +75,10 @@ def build_multi_backbone_feature_extractor(
     return {name: build_backbone(name, trainable=trainable) for name in backbone_names}
 
 
-def fuse_backbone_outputs(
-    image_input: tf.Tensor, backbones: dict[str, tf.keras.Model]
-) -> tf.Tensor:
-    """Run the same spectrogram image through every backbone and concatenate
-    the pooled embeddings -> the paper's "feature fusion" step."""
+def fuse_backbone_outputs(image_input, backbones):
     features = []
     for name, backbone in backbones.items():
-        prepped = preprocess_for_backbone(name, image_input)
+        _, _, input_size = _BACKBONE_FACTORY[name]
+        prepped = BackbonePreprocess(name, input_size, name=f"{name}_preprocess")(image_input)
         features.append(backbone(prepped))
     return layers.Concatenate(name="fused_features")(features)
