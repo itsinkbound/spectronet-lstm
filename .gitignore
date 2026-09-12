@@ -8,7 +8,7 @@ build/
 dist/
 .pytest_cache/
 .mypy_cache/
-data/
+/data/
 artifacts/
 checkpoints/
 *.h5
