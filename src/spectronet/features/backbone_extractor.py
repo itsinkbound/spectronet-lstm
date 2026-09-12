@@ -7,8 +7,8 @@ training phase all backbone layers are frozen; during fine-tuning the last
 `fine_tune_last_n_layers` layers of each backbone are unfrozen.
 """
 from __future__ import annotations
-import keras
 
+import keras
 import tensorflow as tf
 from tensorflow.keras import layers
 
