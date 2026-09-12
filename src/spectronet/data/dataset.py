@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import dataclasses
 from pathlib import Path
-from typing import List
 
 import numpy as np
 import pandas as pd
