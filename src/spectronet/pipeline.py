@@ -6,11 +6,10 @@ in isolation with `--stage {preprocess,train,evaluate,explain}` for use in
 an orchestrated (e.g. Airflow/Kubeflow) production pipeline.
 """
 from __future__ import annotations
-from spectronet.models.fusion_model import build_fusion_model
-from pathlib import Path
 
 import argparse
 import logging
+from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
@@ -20,6 +19,7 @@ from spectronet.data.dataset import load_manifest, one_hot, stratified_split
 from spectronet.data.preprocessing import preprocess_signal
 from spectronet.evaluation.metrics import evaluate_predictions, results_table
 from spectronet.features.spectrogram import signal_to_backbone_input
+from spectronet.models.fusion_model import build_fusion_model
 from spectronet.training.train import train_fusion_model
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -100,7 +100,8 @@ def load_trained_model(cfg: PipelineConfig, checkpoint_path: str | None = None):
     """Rebuilds the architecture and loads saved weights — used when
     --stage evaluate/explain is run standalone, without a fresh --stage train
     in the same invocation."""
-    path = Path(checkpoint_path or Path(cfg.train.checkpoint_dir) / "spectronet_lstm_fine_tuned.keras")
+    default_path = Path(cfg.train.checkpoint_dir) / "spectronet_lstm_fine_tuned.keras"
+    path = Path(checkpoint_path) if checkpoint_path else default_path
     if not path.exists():
         raise FileNotFoundError(
             f"No checkpoint at {path}. Run --stage train (or --stage all) first, "
