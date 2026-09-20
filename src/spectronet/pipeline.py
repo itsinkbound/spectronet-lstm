@@ -6,6 +6,8 @@ in isolation with `--stage {preprocess,train,evaluate,explain}` for use in
 an orchestrated (e.g. Airflow/Kubeflow) production pipeline.
 """
 from __future__ import annotations
+from spectronet.models.fusion_model import build_fusion_model
+from pathlib import Path
 
 import argparse
 import logging
@@ -94,6 +96,21 @@ def stage_evaluate(cfg: PipelineConfig, model, test_df):
     log.info("\n%s", table.to_string(index=False))
     return result
 
+def load_trained_model(cfg: PipelineConfig, checkpoint_path: str | None = None):
+    """Rebuilds the architecture and loads saved weights — used when
+    --stage evaluate/explain is run standalone, without a fresh --stage train
+    in the same invocation."""
+    path = Path(checkpoint_path or Path(cfg.train.checkpoint_dir) / "spectronet_lstm_fine_tuned.keras")
+    if not path.exists():
+        raise FileNotFoundError(
+            f"No checkpoint at {path}. Run --stage train (or --stage all) first, "
+            f"or pass --checkpoint pointing at an existing .keras file."
+        )
+    model = build_fusion_model(cfg.model)
+    model.load_weights(str(path))
+    log.info("Loaded trained model from %s", path)
+    return model
+
 
 def main():
     parser = argparse.ArgumentParser(description="SpectroNet-LSTM pipeline")
@@ -103,15 +120,37 @@ def main():
         choices=["all", "preprocess", "train", "evaluate", "explain"],
         default="all",
     )
+    parser.add_argument(
+        "--checkpoint",
+        default=None,
+        help="Path to a .keras checkpoint. Used by --stage evaluate/explain "
+             "when run standalone (no fresh train in this invocation). "
+             "Defaults to <train.checkpoint_dir>/spectronet_lstm_fine_tuned.keras.",
+    )
     args = parser.parse_args()
 
     cfg = PipelineConfig.from_yaml(args.config)
+
+    if args.stage == "preprocess":
+        stage_preprocess(cfg)
+        return
+
     train_df, val_df, test_df = stage_preprocess(cfg)
 
-    if args.stage in ("all", "train", "evaluate", "explain"):
+    if args.stage in ("all", "train"):
         artifacts = stage_train(cfg, train_df, val_df)
-        if args.stage in ("all", "evaluate"):
-            stage_evaluate(cfg, artifacts.model, test_df)
+        model = artifacts.model
+    else:  # evaluate / explain, run standalone against a saved checkpoint
+        model = load_trained_model(cfg, args.checkpoint)
+
+    if args.stage in ("all", "evaluate"):
+        stage_evaluate(cfg, model, test_df)
+
+    if args.stage == "explain":
+        raise NotImplementedError(
+            "stage_explain() doesn't exist yet — SHAP/LIME are only wired up "
+            "in notebooks/. This is a separate follow-up, not part of this fix."
+        )
 
 
 if __name__ == "__main__":
