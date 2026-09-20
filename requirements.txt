@@ -13,3 +13,6 @@ lime==0.2.0.1
 PyYAML==6.0.3
 tqdm==4.70.1
 pytest==9.1.1
+fastapi==0.121.2
+uvicorn==0.38.0
+python-multipart==0.0.20

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SpectroNet-LSTM — Heartbeat Anomaly Detection</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 480px; margin: 60px auto; padding: 0 20px; }
+  h1 { font-size: 1.3rem; }
+  #dropzone { border: 2px dashed #999; border-radius: 12px; padding: 40px 20px; text-align: center; cursor: pointer; }
+  #dropzone.dragover { border-color: #333; background: #f5f5f5; }
+  #result { margin-top: 28px; display: none; }
+  #topLabel { font-size: 1.6rem; font-weight: 600; text-transform: capitalize; }
+  #confidence { color: #555; margin-top: 4px; }
+  .warning { color: #a15c00; background: #fff4e0; padding: 10px 14px; border-radius: 8px; margin-top: 12px; font-size: 0.9rem; }
+  .bars { margin-top: 18px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 0.85rem; }
+  .bar-label { width: 90px; text-transform: capitalize; }
+  .bar-track { flex: 1; background: #eee; border-radius: 4px; height: 10px; overflow: hidden; }
+  .bar-fill { background: #444; height: 100%; }
+  .bar-value { width: 42px; text-align: right; color: #666; }
+  #error { color: #b00020; margin-top: 16px; display: none; }
+  #status { color: #777; margin-top: 12px; display: none; }
+</style>
+</head>
+<body>
+  <h1>Heartbeat Anomaly Detection</h1>
+  <p>Upload a heart sound recording (.wav, .flac, .ogg) for analysis.</p>
+
+  <div id="dropzone">
+    <p>Click to choose a file, or drag one here</p>
+    <input type="file" id="fileInput" accept=".wav,.flac,.ogg" style="display:none">
+  </div>
+
+  <p id="status">Analyzing…</p>
+  <p id="error"></p>
+
+  <div id="result">
+    <div id="topLabel"></div>
+    <div id="confidence"></div>
+    <div id="lowConfWarning" class="warning" style="display:none;">
+      ⚠ Low confidence — the top two classes are close. Treat this result as inconclusive rather than a firm diagnosis.
+    </div>
+    <div class="bars" id="bars"></div>
+  </div>
+
+  <script>
+    const API_URL = "http://127.0.0.1:8000/predict";
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("fileInput");
+    const statusEl = document.getElementById("status");
+    const errorEl = document.getElementById("error");
+    const resultEl = document.getElementById("result");
+    const topLabelEl = document.getElementById("topLabel");
+    const confidenceEl = document.getElementById("confidence");
+    const lowConfEl = document.getElementById("lowConfWarning");
+    const barsEl = document.getElementById("bars");
+
+    dropzone.addEventListener("click", () => fileInput.click());
+    dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.classList.add("dragover"); });
+    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length) handleFile(fileInput.files[0]);
+    });
+
+    async function handleFile(file) {
+      resultEl.style.display = "none";
+      errorEl.style.display = "none";
+      statusEl.style.display = "block";
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch(API_URL, { method: "POST", body: formData });
+        const data = await res.json();
+        statusEl.style.display = "none";
+
+        if (!res.ok) {
+          errorEl.textContent = data.detail || "Something went wrong.";
+          errorEl.style.display = "block";
+          return;
+        }
+
+        topLabelEl.textContent = `Most likely: ${data.prediction}`;
+        confidenceEl.textContent = `Confidence: ${(data.confidence * 100).toFixed(1)}%`;
+        lowConfEl.style.display = data.low_confidence ? "block" : "none";
+
+        barsEl.innerHTML = "";
+        const sorted = Object.entries(data.probabilities).sort((a, b) => b[1] - a[1]);
+        for (const [label, prob] of sorted) {
+          const row = document.createElement("div");
+          row.className = "bar-row";
+          row.innerHTML = `
+            <div class="bar-label">${label}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${(prob * 100).toFixed(1)}%"></div></div>
+            <div class="bar-value">${(prob * 100).toFixed(0)}%</div>`;
+          barsEl.appendChild(row);
+        }
+
+        resultEl.style.display = "block";
+      } catch (err) {
+        statusEl.style.display = "none";
+        errorEl.textContent = "Could not reach the API. Is it running at " + API_URL + "?";
+        errorEl.style.display = "block";
+      }
+    }
+  </script>
+</body>
+</html>
